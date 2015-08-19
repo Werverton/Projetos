@@ -5,6 +5,6 @@
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
         <property name="java-output-path" value="/projetospring/target/classes"/>
-        <property name="context-root" value="projeto-academico"/>
+        <property name="context-root" value="projetospring"/>
     </wb-module>
 </project-modules>
