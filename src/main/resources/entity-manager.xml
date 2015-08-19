@@ -22,7 +22,7 @@
 				<property name="generateDdl" value="true" />
 			</bean>
 		</property>
-		<property name="persistenceUnitName" value="projeto-academico" />
+		<property name="persistenceUnitName" value="projetospring" />
 	</bean>
 
 	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
