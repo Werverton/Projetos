@@ -82,3 +82,5 @@ public String repairJson(String badJson) {
 
     return result.toString();
 }
+
+{"codigoSistemaOrigem": "DXC," "emissor": 1001,"filialEmissor": 1,"codigoProduto": 1,"numeroConta": 2497,"correlativo": 1,"numeroCartaoMascarado": "8682","identificadorMovimentacao": 10,"codigoCorte": 4,"periodoCorte": 202309,"dataProcessamento": 20240612,"dataTransacao": 20240612,"descricaoEstabelecimento": "","codigoMetodoPagamento": 1,"codigoRubrica": 2129,"identificadorTransacao": 0,"tipoMoeda": 1,"valorTransacaoReal": 1001.0,"parcelaAtual": 1,"quantidadeParcelas": 1,"codigoMoedaOrigem": 986,"valorTransacaoOrigem": 1001.0,"taxaDolar": 0,"codigoTipoPagamentoOrigem": "1","codigoBancoOrigem": null,"dataRetornoArquivo": "2024-06-12","qtdTentativasPersistencia": 0,"nomeFila": "QL.CART.CASHBACK_BV_DXC.INT"}
