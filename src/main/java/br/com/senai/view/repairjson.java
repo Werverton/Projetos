@@ -69,6 +69,11 @@ public String repairJson(String badJson) {
             } else if (!Character.isWhitespace(currentChar)) {
                 afterColon = false;
             }
+        } else {
+            // Remove vírgulas dentro de strings
+            if (currentChar == ',' && previousChar == '"') {
+                continue;
+            }
         }
         
         result.append(currentChar);
