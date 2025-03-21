@@ -6,8 +6,8 @@ public String repairJson(String badJson) {
         return badJson;
     }
 
-    // Primeiro passo: remover aspas duplas consecutivas
-    String cleanJson = badJson.replaceAll("\"\"", "\"");
+    // Primeiro passo: remover aspas duplas consecutivas, exceto quando estão no final antes de }
+    String cleanJson = badJson.replaceAll("\"\"(?!\\s*})", "\"");
 
     // Remove trailing commas inside string values
     cleanJson = cleanJson.replaceAll("\"([^\"]+),\"", "\"$1\"");
@@ -73,6 +73,11 @@ public String repairJson(String badJson) {
                 needsComma = true;
             }
         }
+    }
+
+    // Adiciona vírgula faltante no final se necessário
+    if (needsComma && result.charAt(result.length() - 1) != ',') {
+        result.append(',');
     }
 
     return result.toString();
