@@ -1,3 +1,6 @@
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public String repairJson(String badJson) {
     if (badJson == null || badJson.isEmpty()) {
         return badJson;
