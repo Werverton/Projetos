@@ -3,40 +3,81 @@ public String repairJson(String badJson) {
         return badJson;
     }
 
-    StringBuilder result = new StringBuilder(badJson.length() + 10);
+    // Primeiro passo: remover aspas duplas consecutivas
+    String cleanJson = badJson.replaceAll("\"\"", "\"");
+
+    StringBuilder result = new StringBuilder(cleanJson.length() + 10);
     boolean inString = false;
-    char lastChar = 0;
+    boolean afterColon = false;
+    boolean needsComma = false;
+    char previousChar = 0;
     
-    for (int i = 0; i < badJson.length(); i++) {
-        char currentChar = badJson.charAt(i);
+    for (int i = 0; i < cleanJson.length(); i++) {
+        char currentChar = cleanJson.charAt(i);
         
         // Controla se estamos dentro de uma string
-        if (currentChar == '"' && (i == 0 || badJson.charAt(i - 1) != '\\')) {
+        if (currentChar == '"' && previousChar != '\\') {
             inString = !inString;
         }
         
-        // Se não estiver dentro de uma string, trata as chaves
         if (!inString) {
-            // Identifica início de uma chave
-            if (Character.isLetterOrDigit(currentChar) && 
-                (i == 0 || lastChar == '{' || lastChar == ',')) {
-                result.append('"');
+            // Remove espaços entre aspas e vírgulas
+            if (Character.isWhitespace(currentChar)) {
+                if (previousChar == '"' && i < cleanJson.length() - 1 && cleanJson.charAt(i + 1) == ',') {
+                    continue;
+                }
             }
             
-            // Adiciona o caractere atual
-            result.append(currentChar);
+            // Adiciona aspas em chaves sem aspas
+            if (Character.isLetterOrDigit(currentChar) && !afterColon && previousChar != '"') {
+                if (i == 0 || previousChar == '{' || previousChar == ',') {
+                    result.append('"');
+                }
+            }
             
-            // Identifica fim de uma chave
-            if (currentChar == ':' && !Character.isWhitespace(lastChar) && lastChar != '"') {
+            // Adiciona vírgula entre pares chave-valor
+            if (currentChar == '{' || currentChar == '}') {
+                needsComma = false;
+            } else if (needsComma && currentChar != ',' && currentChar != '}') {
+                if (!Character.isWhitespace(currentChar)) {
+                    result.append(',');
+                    needsComma = false;
+                }
+            }
+            
+            // Remove vírgulas antes de }
+            if (currentChar == '}' && previousChar == ',') {
                 result.setLength(result.length() - 1);
-                result.append("\":");
             }
-        } else {
-            result.append(currentChar);
+            
+            // Remove vírgulas consecutivas
+            if (currentChar == ',' && previousChar == ',') {
+                continue;
+            }
+            
+            // Atualiza flag de após dois pontos
+            if (currentChar == ':') {
+                afterColon = true;
+                // Adiciona aspas antes do valor se necessário
+                if (i < cleanJson.length() - 1) {
+                    char nextChar = cleanJson.charAt(i + 1);
+                    if (!Character.isWhitespace(nextChar) && nextChar != '"' && nextChar != '{' && nextChar != '[') {
+                        result.append(currentChar).append('"');
+                        continue;
+                    }
+                }
+            } else if (!Character.isWhitespace(currentChar)) {
+                afterColon = false;
+            }
         }
         
+        result.append(currentChar);
+        
         if (!Character.isWhitespace(currentChar)) {
-            lastChar = currentChar;
+            previousChar = currentChar;
+            if (currentChar == '"' || currentChar == '}') {
+                needsComma = true;
+            }
         }
     }
     
