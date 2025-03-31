@@ -4,20 +4,23 @@ import java.util.regex.*;
 public class JsonCorrector {
 
     public static String corrigirJson(String jsonString) {
-        // 1. Remove vírgulas dentro de strings (como "DXC," -> "DXC")
+        // 1. Remove vírgulas dentro de strings (preserva vírgulas normais)
         jsonString = jsonString.replaceAll("\"([^\"]*),\"", "\"$1\"");
         
-        // 2. Corrige falta de vírgula entre propriedades
-        jsonString = jsonString.replaceAll("\"\\s*\"\\s*([^\"\\]])", "\", $1");
+        // 2. Corrige números com vírgula (mas preserva decimais)
+        jsonString = jsonString.replaceAll("(\\d),([^0-9])", "$1$2");
         
-        // 3. Remove vírgulas antes de fechamentos
+        // 3. Adiciona vírgulas faltantes entre propriedades
+        jsonString = jsonString.replaceAll("(\"[^\"]*\"|[0-9.]+|null)\\s*(\"[^\"]*\"|\\d)", "$1, $2");
+        
+        // 4. Remove vírgulas antes de fechamentos
         jsonString = jsonString.replaceAll(",\\s*([}\\])])", "$1");
         
-        // 4. Remove vírgulas duplas
+        // 5. Remove vírgulas duplas
         jsonString = jsonString.replaceAll(",(\\s*,)", ",");
         
-        // 5. Corrige casos específicos do seu JSON
-        jsonString = jsonString.replaceAll("(\"[^\"]*\")\\s*(\"[^\"]*\")", "$1, $2");
+        // 6. Garante que cada propriedade tenha : entre chave e valor
+        jsonString = jsonString.replaceAll("(\"[^\"]*\")\\s*([^:])", "$1: $2");
         
         return jsonString;
     }
@@ -29,8 +32,10 @@ public class JsonCorrector {
         // Primeira passada para corrigir os problemas mais graves
         jsonCorrigido = corrigirJson(jsonCorrigido);
         
-        // Segunda passada para garantir
-        jsonCorrigido = jsonCorrigido.replaceAll("\"\\s*\"", "\", \"");
+        // Segunda passada para garantir a formatação final
+        jsonCorrigido = jsonCorrigido
+            .replaceAll("\"\\s*:\"", "\":\"")
+            .replaceAll(":\"\\s*\"", ":\"\"");
         
         return new JSONObject(jsonCorrigido);
     }
@@ -82,20 +87,23 @@ public class JsonCorrector {
             
         } catch (Exception e) {
             System.err.println("\nErro ao processar JSON: " + e.getMessage());
-            System.err.println("Última tentativa...");
+            System.err.println("Última tentativa com correção agressiva...");
             
-            // Tentativa final mais agressiva
             try {
+                // Correção agressiva final
                 String ultimaTentativa = jsonProblematico
                     .replaceAll("\",\"", "\", \"")
                     .replaceAll(",,", ",")
-                    .replaceAll("\"\\s*\"", "\", \"");
+                    .replaceAll("\"\\s*\"", "\", \"")
+                    .replaceAll("(\"[^\"]*\")\\s*(\"[^\"]*\")", "$1: $2")
+                    .replaceAll("(\\d),([^0-9])", "$1$2");
                 
                 JSONObject jsonObj = new JSONObject(ultimaTentativa);
                 System.out.println("Sucesso na tentativa final!");
                 System.out.println(jsonObj.toString(2));
             } catch (Exception ex) {
                 System.err.println("Falha definitiva: " + ex.getMessage());
+                ex.printStackTrace();
             }
         }
     }
