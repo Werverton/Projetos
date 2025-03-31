@@ -108,3 +108,10 @@ public class JsonCorrector {
         }
     }
 }
+
+
+<dependency>
+    <groupId>org.json</groupId>
+    <artifactId>json</artifactId>
+    <version>20231013</version>
+</dependency>
