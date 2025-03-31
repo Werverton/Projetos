@@ -1,90 +1,102 @@
-public class JsonRepairer {
+import org.json.JSONObject;
+import java.util.regex.*;
 
-    public static String repairJson(String badJson) {
-        if (badJson == null || badJson.isEmpty()) {
-            return badJson;
-        }
+public class JsonCorrector {
 
-        StringBuilder result = new StringBuilder(badJson.length());
-        boolean inString = false;
-        boolean needsComma = false;
-        boolean afterValue = false;
-        char lastChar = 0;
-
-        for (int i = 0; i < badJson.length(); i++) {
-            char currentChar = badJson.charAt(i);
-
-            if (shouldIgnoreComma(currentChar, lastChar)) {
-                continue;
-            }
-
-            if (isQuote(currentChar, lastChar)) {
-                handleQuote(result, currentChar, needsComma, inString, afterValue, lastChar);
-                inString = !inString;
-                if (!inString) {
-                    afterValue = true;
-                }
-            } else if (inString && currentChar == ',') {
-                continue;
-            } else if (!inString && currentChar == '"') {
-                handleClosingQuote(result, currentChar, afterValue, lastChar);
-                afterValue = false;
-            } else {
-                handleOtherCharacters(result, currentChar, lastChar, inString);
-                if (!inString && currentChar == ':') {
-                    afterValue = false;
-                }
-            }
-
-            if (!inString && currentChar == '"') {
-                needsComma = true;
-            }
-
-            lastChar = currentChar;
-        }
-
-        return result.toString();
+    public static String corrigirJson(String jsonString) {
+        // 1. Remove vírgulas dentro de strings (como "DXC," -> "DXC")
+        jsonString = jsonString.replaceAll("\"([^\"]*),\"", "\"$1\"");
+        
+        // 2. Corrige falta de vírgula entre propriedades
+        jsonString = jsonString.replaceAll("\"\\s*\"\\s*([^\"\\]])", "\", $1");
+        
+        // 3. Remove vírgulas antes de fechamentos
+        jsonString = jsonString.replaceAll(",\\s*([}\\])])", "$1");
+        
+        // 4. Remove vírgulas duplas
+        jsonString = jsonString.replaceAll(",(\\s*,)", ",");
+        
+        // 5. Corrige casos específicos do seu JSON
+        jsonString = jsonString.replaceAll("(\"[^\"]*\")\\s*(\"[^\"]*\")", "$1, $2");
+        
+        return jsonString;
     }
 
-    private static boolean shouldIgnoreComma(char currentChar, char lastChar) {
-        return currentChar == ',' && lastChar == ',';
-    }
-
-    private static boolean isQuote(char currentChar, char lastChar) {
-        return currentChar == '"' && lastChar != '\\';
-    }
-
-    private static void handleQuote(StringBuilder result, char currentChar, boolean needsComma, boolean inString, boolean afterValue, char lastChar) {
-        if (needsComma && !inString && afterValue && lastChar != ',') {
-            result.append(',');
-        }
-        result.append(currentChar);
-    }
-
-    private static void handleClosingQuote(StringBuilder result, char currentChar, boolean afterValue, char lastChar) {
-        if (lastChar == '"' && afterValue && lastChar != ',') {
-            result.append(',').append(currentChar);
-        } else {
-            result.append(currentChar);
-        }
-    }
-
-    private static void handleOtherCharacters(StringBuilder result, char currentChar, char lastChar, boolean inString) {
-        if (currentChar == ',' && !inString) {
-            if (lastChar != ',') {
-                result.append(currentChar);
-            }
-        } else {
-            result.append(currentChar);
-        }
+    public static JSONObject parseJsonCorrigido(String jsonString) throws Exception {
+        // Aplica correções em etapas
+        String jsonCorrigido = jsonString;
+        
+        // Primeira passada para corrigir os problemas mais graves
+        jsonCorrigido = corrigirJson(jsonCorrigido);
+        
+        // Segunda passada para garantir
+        jsonCorrigido = jsonCorrigido.replaceAll("\"\\s*\"", "\", \"");
+        
+        return new JSONObject(jsonCorrigido);
     }
 
     public static void main(String[] args) {
-        String complexJson = "{\"codigoSistemaOrigem\": \"DXC\" \"emissor\": 1001,\"filialEmissor\": 1,\"codigoProduto\": 1,\"numeroConta\": 2497,\"correlativo\": 1,\"numeroCartaoMascarado\": \"8682\",,\"identificadorMovimentacao\": 10,\"codigoCorte\": 4,\"periodoCorte\": 202309,\"dataProcessamento\": 20240612,\"dataTransacao\": 20240612,\"descricaoEstabelecimento\": \"\",,\"codigoMetodoPagamento\": 1,\"codigoRubrica\": 2129,\"identificadorTransacao\": 0,\"tipoMoeda\": 1,\"valorTransacaoReal\": 1001.0,\"parcelaAtual\": 1,\"quantidadeParcelas\": 1,\"codigoMoedaOrigem\": 986,\"valorTransacaoOrigem\": 1001.0,\"taxaDolar\": 0,\"codigoTipoPagamentoOrigem\": \"1\",,\"codigoBancoOrigem\": null,\"dataRetornoArquivo\": \"2024-06-12\",,\"qtdTentativasPersistencia\": 0,\"nomeFila\": \"QL.CART.CASHBACK_BV_DXC.INT\"}";
-        String fixedJson = repairJson(complexJson);
-        System.out.println("JSON Original:");
-        System.out.println(complexJson);
-        System.out.println("\nJSON Corrigido:");
-        System.out.println(fixedJson);
+        String jsonProblematico = "{\n" +
+                "  \"codigoSistemaOrigem\": \"DXC,\"\n" +
+                "  \"emissor\": 1001,\n" +
+                "  \"filialEmissor\": 1,\n" +
+                "  \"codigoProduto\": 1,\n" +
+                "  \"numeroConta\": 2497,\n" +
+                "  \"correlativo\": 1,\n" +
+                "  \"numeroCartaoMascarado\": \"8682\",,\n" +
+                "  \"identificadorMovimentacao\": 10,\n" +
+                "  \"codigoCorte\": 4,\n" +
+                "  \"periodoCorte\": 202309,\n" +
+                "  \"dataProcessamento\": 20240612,\n" +
+                "  \"dataTransacao\": 20240612,\n" +
+                "  \"descricaoEstabelecimento\": \"\",,\n" +
+                "  \"codigoMetodoPagamento\": 1,\n" +
+                "  \"codigoRubrica\": 2129,\n" +
+                "  \"identificadorTransacao\": 0,\n" +
+                "  \"tipoMoeda\": 1,\n" +
+                "  \"valorTransacaoReal\": 1001.0,\n" +
+                "  \"parcelaAtual\": 1,\n" +
+                "  \"quantidadeParcelas\": 1,\n" +
+                "  \"codigoMoedaOrigem\": 986,\n" +
+                "  \"valorTransacaoOrigem\": 1001.0,\n" +
+                "  \"taxaDolar\": 0,\n" +
+                "  \"codigoTipoPagamentoOrigem\": \"1\",,\n" +
+                "  \"codigoBancoOrigem\": null,\n" +
+                "  \"dataRetornoArquivo\": \"2024-06-12\",,\n" +
+                "  \"qtdTentativasPersistencia\": 0,\n" +
+                "  \"nomeFila\": \"QL.CART.CASHBACK_BV_DXC.INT\"\n" +
+                "}";
+
+        try {
+            System.out.println("JSON original problemático:");
+            System.out.println(jsonProblematico);
+            
+            System.out.println("\nJSON corrigido:");
+            String jsonCorrigido = corrigirJson(jsonProblematico);
+            System.out.println(jsonCorrigido);
+            
+            System.out.println("\nTentando parsear...");
+            JSONObject jsonObj = parseJsonCorrigido(jsonProblematico);
+            System.out.println("Objeto JSON parseado com sucesso!");
+            System.out.println(jsonObj.toString(2));
+            
+        } catch (Exception e) {
+            System.err.println("\nErro ao processar JSON: " + e.getMessage());
+            System.err.println("Última tentativa...");
+            
+            // Tentativa final mais agressiva
+            try {
+                String ultimaTentativa = jsonProblematico
+                    .replaceAll("\",\"", "\", \"")
+                    .replaceAll(",,", ",")
+                    .replaceAll("\"\\s*\"", "\", \"");
+                
+                JSONObject jsonObj = new JSONObject(ultimaTentativa);
+                System.out.println("Sucesso na tentativa final!");
+                System.out.println(jsonObj.toString(2));
+            } catch (Exception ex) {
+                System.err.println("Falha definitiva: " + ex.getMessage());
+            }
+        }
     }
 }
